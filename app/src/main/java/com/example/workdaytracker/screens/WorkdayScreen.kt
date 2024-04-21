@@ -38,6 +38,8 @@ import com.example.workdaytracker.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 //shows workday duration, pause duration, gives ability to pause/resume and end work
@@ -233,7 +235,8 @@ fun WorkdayScreen(
                     workStartTime = trackingStartTime,
                     workEndTime = workEndTime,
                     workDuration = workTimer.longValue,
-                    pauseDuration = pauseTimer.longValue
+                    pauseDuration = pauseTimer.longValue,
+                    weekday = systemDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
                 )
 
                 coroutineScope.launch {

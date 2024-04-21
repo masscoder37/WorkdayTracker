@@ -50,6 +50,8 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.time.format.TextStyle
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -321,6 +323,7 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
 
 
 
+                    //TODO: add back button without saving
                     Button(onClick = {
                         // Create an updated workDataForDate!! object from the edited fields
                         val updatedWorkData = WorkData(
@@ -329,7 +332,9 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                             workDuration = workDuration.longValue,
                             pauseDuration = pauseDuration.longValue,
                             date = selectedDate,
-                            id = workDataForDate!!.id
+                            id = workDataForDate!!.id,
+                            weekday = selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                            isManuallyEdited = true
                         )
 
                         // Update database

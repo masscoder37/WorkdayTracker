@@ -12,5 +12,7 @@ data class WorkData(
     val workStartTime: Long,
     val workEndTime: Long,
     val workDuration: Long,
-    val pauseDuration: Long
+    val pauseDuration: Long,
+    val weekday: String,  // New field for the day of the week
+    val isManuallyEdited: Boolean = false  // New field to indicate if the entry was manually edited
 )

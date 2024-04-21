@@ -56,6 +56,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.style.TextDecoration
 import java.time.LocalTime
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -371,7 +373,9 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         driveEndTime = driveWorkEndMilli.longValue,
                                         fuelUse = driveWorkFuelUse.value,
                                         comment = driveWorkComment.value,
-                                        destination = "Work"
+                                        destination = "Work",
+                                        weekday = selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                                        isManuallyEdited = true
                                     )
 
                                     // Update database
@@ -760,7 +764,8 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     driveEndTime = driveHomeEndMilli.longValue,
                                     fuelUse = driveHomeFuelUse.value,
                                     comment = driveHomeComment.value,
-                                    destination = "Home"
+                                    destination = "Home",weekday = selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                                    isManuallyEdited = true
                                 )
 
                                 // Update database

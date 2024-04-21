@@ -13,5 +13,7 @@ data class DriveData(
     val driveEndTime: Long,
     val driveDuration: Long,
     val fuelUse: String,
-    val comment: String
+    val comment: String,
+    val weekday: String,  // New field for the day of the week
+    val isManuallyEdited: Boolean = false  // New field to indicate if the entry was manually edited
 )

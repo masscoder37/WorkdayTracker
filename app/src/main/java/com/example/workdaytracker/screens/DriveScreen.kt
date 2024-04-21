@@ -42,6 +42,8 @@ import com.example.workdaytracker.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.format.TextStyle
+import java.util.Locale
 
 //Show Current Duration of Drive, destination, gives possibility to end drive
 @OptIn(ExperimentalMaterial3Api::class)
@@ -190,7 +192,8 @@ fun DriveScreen(navController: NavController, destination: String, driveStartTim
                             driveEndTime = driveEndTime.longValue,
                             driveDuration = (driveEndTime.longValue-driveStartTime),
                             fuelUse = fuelUse.value,
-                            comment = comment.value
+                            comment = comment.value,
+                            weekday = systemDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
                         )
 
                         coroutineScope.launch {
