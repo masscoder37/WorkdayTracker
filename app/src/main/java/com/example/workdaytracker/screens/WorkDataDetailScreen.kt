@@ -1,8 +1,8 @@
 package com.example.workdaytracker.screens
 
 import android.app.AlertDialog
-import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -144,6 +145,7 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
             //variables for time picker dialogs
             val showTimePickerDialog = remember { mutableStateOf(false) }
             val isStartTimePicker = remember { mutableStateOf(true) }
+            val showPausePickerDialog = remember { mutableStateOf(false)  }
 
 
 
@@ -153,11 +155,20 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                     context,
                     { _, hourOfDay, minute ->
                         val selectedTime = LocalTime.of(hourOfDay, minute)
-                        if (isStartTimePicker.value) localTimeStart.value = selectedTime else localTimeEnd.value =
-                            selectedTime
-                        //error handling
-                        if (localTimeEnd.value <= localTimeStart.value) {
-                            localTimeEnd.value = localTimeStart.value.plusHours(1)
+                        if (isStartTimePicker.value) {
+                            localTimeStart.value = selectedTime
+                            startTimeString.value = localTimeStart.value.format(timeFormatter)
+                            workStart.longValue = selectedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        } else {
+                            localTimeEnd.value = selectedTime
+                            endTimeString.value = localTimeEnd.value.format(timeFormatter)
+                            workEnd.longValue = selectedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        }
+                        // Automatically calculate work duration
+                        if (workEnd.longValue > workStart.longValue) {
+                            val durationMillis = workEnd.longValue - workStart.longValue
+                            workDuration.longValue = durationMillis - pauseDuration.longValue
+                            workDurationString.value = formatDuration(durationMillis - pauseDuration.longValue)
                         }
                         showTimePickerDialog.value = false
                     },
@@ -167,7 +178,31 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                 ).show()
             }
 
+            // Handling the pause duration picker dialog
+            if (showPausePickerDialog.value) {
+                val currentPauseHours = TimeUnit.MILLISECONDS.toHours(pauseDuration.longValue).toInt()
+                val currentPauseMinutes = (TimeUnit.MILLISECONDS.toMinutes(pauseDuration.longValue) % 60).toInt()
+                TimePickerDialog(
+                    context,
+                    { _, hourOfDay, minute ->
+                        val totalPauseMillis = hourOfDay * 3600000 + minute * 60000
+                        pauseDuration.longValue = totalPauseMillis.toLong()
+                        pauseDurationString.value = formatDuration(totalPauseMillis.toLong())
 
+                        // Recalculate work duration
+                        val durationMillis = workEnd.longValue - workStart.longValue
+                        if (durationMillis > totalPauseMillis) {
+                            workDuration.longValue = durationMillis - totalPauseMillis
+                            workDurationString.value = formatDuration(workDuration.longValue)
+                        }
+
+                        showPausePickerDialog.value = false
+                    },
+                    currentPauseHours,
+                    currentPauseMinutes,
+                    true
+                ).show()
+            }
 
             //editing view
             if (isEditing.value) {
@@ -205,14 +240,10 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                     ) {
                         Text("Work Duration:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.width(20.dp))
-
-                        TextField(
-                            value = workDurationString.value,
-                            onValueChange = {
-                                workDurationString.value = it
-                                workDuration.longValue = durationStringHoursToMilliseconds(it, workDataCopy.value.workDuration)
-                            },
-                            label = { Text("Work Duration (hh:mm)") }
+                        Text(
+                            text = workDurationString.value,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -223,15 +254,19 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Pause Duration:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text("Pause Duration:", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Spacer(modifier = Modifier.width(20.dp))
-                        TextField(
-                            value = pauseDurationString.value,
-                            onValueChange = {
-                                pauseDurationString.value = it
-                                pauseDuration.longValue = durationStringHoursToMilliseconds(it, workDataCopy.value.pauseDuration)
-                            },
-                            label = { Text("Pause Duration (hh:mm)") }
+                        // Pause Duration Picker
+                        Text(
+                            text = pauseDurationString.value,
+                            fontSize = 18.sp,
+                            modifier = Modifier
+                                .clickable {
+                                    showPausePickerDialog.value = true
+                                }
+                                .padding(8.dp),
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline
                         )
                     }
                     Spacer(modifier = Modifier.height(30.dp))
@@ -244,14 +279,17 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                     ) {
                         Text("Work started at:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.width(20.dp))
-                        TextField(
-                            value = startTimeString.value,
-                            onValueChange = {
-                                startTimeString.value = it
-                                workStart.longValue =
-                                    timeStringToEpochMilli(it, workDataForDate!!.date, workDataCopy.value.workStartTime)
-                            },
-                            label = { Text("Work Start Time") }
+                        Text(
+                            text = startTimeString.value,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .clickable {
+                                    showTimePickerDialog.value = true
+                                    isStartTimePicker.value = true
+                                }
+                                .padding(8.dp),
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -264,14 +302,17 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                     ) {
                         Text("Work ended at:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.width(20.dp))
-                        TextField(
-                            value = endTimeString.value,
-                            onValueChange = {
-                                endTimeString.value = it
-                                workEnd.longValue =
-                                    timeStringToEpochMilli(it, workDataForDate!!.date, workDataCopy.value.workEndTime)
-                            },
-                            label = { Text("Work End Time") }
+                        Text(
+                            text = "${endTimeString.value}",
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .clickable {
+                                    showTimePickerDialog.value = true
+                                    isStartTimePicker.value = false
+                                }
+                                .padding(8.dp),
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline
                         )
                     }
                     Spacer(modifier = Modifier.height(20.dp))
@@ -485,5 +526,22 @@ fun durationStringMinutesToMilliseconds(timeString: String, initialValue: Long):
         millisecondsResult = initialValue
     }
     return millisecondsResult
+}
+
+fun formatDuration(milliseconds: Long): String {
+    val hours = TimeUnit.MILLISECONDS.toHours(milliseconds).toInt()
+    val minutes = (TimeUnit.MILLISECONDS.toMinutes(milliseconds) % 60).toInt()
+    return String.format("%02d:%02d", hours, minutes)
+}
+
+fun durationStringToMilliseconds(duration: String): Long {
+    return try {
+        val parts = duration.split(":").map { it.trim() }
+        val hours = parts[0].toInt()
+        val minutes = parts[1].toInt()
+        (hours * 3600000L) + (minutes * 60000L)
+    } catch (e: Exception) {
+        0L // Default to 0 if parsing fails
+    }
 }
 

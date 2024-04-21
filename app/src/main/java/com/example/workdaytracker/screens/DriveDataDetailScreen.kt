@@ -46,6 +46,17 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import android.app.TimePickerDialog
+import android.widget.TimePicker
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.MutableState
+import androidx.compose.ui.text.style.TextDecoration
+import java.time.LocalTime
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -221,18 +232,7 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         fontSize = 20.sp
                                     )
                                     Spacer(modifier = Modifier.width(20.dp))
-                                    TextField(
-                                        value = workDriveDurationString.value,
-                                        onValueChange = {
-                                            workDriveDurationString.value = it
-                                            driveWorkDuration.longValue =
-                                                durationStringMinutesToMilliseconds(
-                                                    it,
-                                                    copyOfWorkDrive.value.driveDuration
-                                                )
-                                        },
-                                        label = { Text("Drive Duration (min:sec)") }
-                                    )
+                                    Text(workDriveDurationString.value)
                                 }
                                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -265,24 +265,36 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        "Drive start time",
+                                        "Drive start time:",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
                                     Spacer(modifier = Modifier.width(20.dp))
-                                    TextField(
-                                        value = driveWorkStartString.value,
-                                        onValueChange = {
-                                            driveWorkStartString.value = it
-                                            driveWorkStartMilli.longValue =
-                                                timeStringToEpochMilli(
-                                                    it,
-                                                    selectedDate,
-                                                    copyOfWorkDrive.value.driveStartTime
-                                                )
-                                        },
-                                        label = { Text("Drive Start Time") }
-                                    )
+
+                                    IconButton(onClick = {
+                                        val initialTime = LocalTime.now()
+                                        TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
+                                            val pickedTime = LocalTime.of(hour, minute)
+                                            driveWorkStartString.value = pickedTime.format(timeFormatter)
+                                            driveWorkStartMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+                                            // Automatically update duration if end time is already set
+                                            if (driveWorkEndMilli.longValue > driveWorkStartMilli.longValue) {
+                                                val durationMillis = driveWorkEndMilli.longValue - driveWorkStartMilli.longValue
+                                                updateDurationFields(durationMillis, workDriveDurationMinutes, workDriveDurationSeconds, workDriveDurationString)
+                                                driveWorkDuration.longValue = durationMillis
+                                            }
+                                        }, initialTime.hour, initialTime.minute, true).show()
+                                    }) {
+
+                                        Spacer(modifier = Modifier.width(5.dp))
+
+                                        Text(driveWorkStartString.value,
+                                            textDecoration = TextDecoration.Underline,
+                                            color = MaterialTheme.colorScheme.primary)
+                                    }
+
+
                                 }
                                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -293,24 +305,34 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        "Drive end time",
+                                        "Drive end time:",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
                                     Spacer(modifier = Modifier.width(20.dp))
-                                    TextField(
-                                        value = driveWorkEndString.value,
-                                        onValueChange = {
-                                            driveWorkEndString.value = it
-                                            driveWorkEndMilli.longValue =
-                                                timeStringToEpochMilli(
-                                                    it,
-                                                    selectedDate,
-                                                    copyOfWorkDrive.value.driveEndTime
-                                                )
-                                        },
-                                        label = { Text("Drive End Time") }
-                                    )
+                                    IconButton(onClick = {
+                                        val initialTime = LocalTime.now()
+                                        TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
+                                            val pickedTime = LocalTime.of(hour, minute)
+                                            driveWorkEndString.value = pickedTime.format(timeFormatter)
+                                            driveWorkEndMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+                                            // Automatically update duration
+                                            if (driveWorkEndMilli.longValue > driveWorkStartMilli.longValue) {
+                                                val durationMillis = driveWorkEndMilli.longValue - driveWorkStartMilli.longValue
+                                                updateDurationFields(durationMillis, workDriveDurationMinutes, workDriveDurationSeconds, workDriveDurationString)
+                                                driveWorkDuration.longValue = durationMillis
+                                            }
+                                        }, initialTime.hour, initialTime.minute, true).show()
+                                    }) {
+                                        Spacer(modifier = Modifier.width(5.dp))
+
+                                        Text(driveWorkEndString.value,
+                                            textDecoration = TextDecoration.Underline,
+                                            color = MaterialTheme.colorScheme.primary)
+                                    }
+
+
                                 }
                                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -467,7 +489,7 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    IconButton(onClick = { isEditingHome.value = true }) {
+                                    IconButton(onClick = { isEditingWork.value = true }) {
                                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                                     }
                                     Spacer(modifier = Modifier.width(20.dp))
@@ -478,8 +500,10 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                             .setPositiveButton("Delete entry") { _, _ ->
                                                 coroutineScope.launch {
                                                     withContext(Dispatchers.IO) {
-                                                        val appDatabase = AppDatabase.getDatabase(context)
-                                                        appDatabase.driveDataDao().deleteById(driveDataForDate[workIndex].id)
+                                                        val appDatabase =
+                                                            AppDatabase.getDatabase(context)
+                                                        appDatabase.driveDataDao()
+                                                            .deleteById(driveDataForDate[workIndex].id)
                                                     }
                                                 }
                                                 navController.navigate("driveDataScreen")
@@ -584,7 +608,6 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                         )
                         Spacer(modifier = Modifier.height(15.dp))
 
-
                         //if editing is enabled
                         if (isEditingHome.value) {
 
@@ -604,18 +627,7 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     fontSize = 20.sp
                                 )
                                 Spacer(modifier = Modifier.width(20.dp))
-                                TextField(
-                                    value = homeDriveDurationString.value,
-                                    onValueChange = {
-                                        homeDriveDurationString.value = it
-                                        driveHomeDuration.longValue =
-                                            durationStringMinutesToMilliseconds(
-                                                it,
-                                                copyOfHomeDrive.value.driveDuration
-                                            )
-                                    },
-                                    label = { Text("Drive Duration (min:sec)") }
-                                )
+                                Text(homeDriveDurationString.value)
                             }
                             Spacer(modifier = Modifier.height(10.dp))
 
@@ -653,19 +665,27 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     fontSize = 20.sp
                                 )
                                 Spacer(modifier = Modifier.width(20.dp))
-                                TextField(
-                                    value = driveHomeStartString.value,
-                                    onValueChange = {
-                                        driveHomeStartString.value = it
-                                        driveHomeStartMilli.longValue =
-                                            timeStringToEpochMilli(
-                                                it,
-                                                selectedDate,
-                                                copyOfHomeDrive.value.driveStartTime
-                                            )
-                                    },
-                                    label = { Text("Drive Start Time") }
-                                )
+                                IconButton(onClick = {
+                                    val initialTime = LocalTime.now()
+                                    TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
+                                        val pickedTime = LocalTime.of(hour, minute)
+                                        driveHomeStartString.value = pickedTime.format(timeFormatter)
+                                        driveHomeStartMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+                                        // Automatically update duration if end time is already set
+                                        if (driveHomeEndMilli.longValue > driveHomeStartMilli.longValue) {
+                                            val durationMillis = driveHomeEndMilli.longValue - driveHomeStartMilli.longValue
+                                            updateDurationFields(durationMillis, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
+                                        }
+                                    }, initialTime.hour, initialTime.minute, true).show()
+                                }) {
+
+                                    Spacer(modifier = Modifier.width(5.dp))
+
+                                    Text(driveHomeStartString.value,
+                                        textDecoration = TextDecoration.Underline,
+                                        color = MaterialTheme.colorScheme.primary)
+                                }
                             }
                             Spacer(modifier = Modifier.height(10.dp))
 
@@ -681,19 +701,27 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     fontSize = 20.sp
                                 )
                                 Spacer(modifier = Modifier.width(20.dp))
-                                TextField(
-                                    value = driveHomeEndString.value,
-                                    onValueChange = {
-                                        driveHomeEndString.value = it
-                                        driveHomeEndMilli.longValue =
-                                            timeStringToEpochMilli(
-                                                it,
-                                                selectedDate,
-                                                copyOfHomeDrive.value.driveEndTime
-                                            )
-                                    },
-                                    label = { Text("Drive End Time") }
-                                )
+                                IconButton(onClick = {
+                                    val initialTime = LocalTime.now()
+                                    TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
+                                        val pickedTime = LocalTime.of(hour, minute)
+                                        driveHomeEndString.value = pickedTime.format(timeFormatter)
+                                        driveHomeEndMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+                                        // Automatically update duration
+                                        if (driveHomeEndMilli.longValue > driveHomeStartMilli.longValue) {
+                                            val durationMillis = driveHomeEndMilli.longValue - driveHomeStartMilli.longValue
+                                            updateDurationFields(durationMillis, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
+                                            driveHomeDuration.longValue = durationMillis
+                                        }
+                                    }, initialTime.hour, initialTime.minute, true).show()
+                                }) {
+                                    Spacer(modifier = Modifier.width(5.dp))
+
+                                    Text(driveHomeEndString.value,
+                                        textDecoration = TextDecoration.Underline,
+                                        color = MaterialTheme.colorScheme.primary)
+                                }
                             }
                             Spacer(modifier = Modifier.height(10.dp))
 
@@ -847,7 +875,7 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                             Spacer(modifier = Modifier.height(10.dp))
 
 
-                           //edit and delete buttons home drive
+                            //edit and delete buttons home drive
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Center,
@@ -864,8 +892,10 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         .setPositiveButton("Delete entry") { _, _ ->
                                             coroutineScope.launch {
                                                 withContext(Dispatchers.IO) {
-                                                    val appDatabase = AppDatabase.getDatabase(context)
-                                                    appDatabase.driveDataDao().deleteById(driveDataForDate[homeIndex].id)
+                                                    val appDatabase =
+                                                        AppDatabase.getDatabase(context)
+                                                    appDatabase.driveDataDao()
+                                                        .deleteById(driveDataForDate[homeIndex].id)
                                                 }
                                             }
                                             navController.navigate("driveDataScreen")
@@ -901,6 +931,19 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
             }
         }
     }
+}
+
+fun updateDurationFields(
+    durationMillis: Long,
+    minutesState: MutableState<Int>,
+    secondsState: MutableState<Int>,
+    durationStringState: MutableState<String>
+) {
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis).toInt()
+    val seconds = (TimeUnit.MILLISECONDS.toSeconds(durationMillis) % 60).toInt()
+    minutesState.value = minutes
+    secondsState.value = seconds
+    durationStringState.value = String.format("%02d:%02d", minutes, seconds)
 }
 
 

@@ -1,6 +1,7 @@
 package com.example.workdaytracker.screens
 
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,13 @@ fun WorkDataScreen(navController: NavController) {
     val workDataDates by produceState(initialValue = listOf<LocalDate>()) {
         value = AppDatabase.getDatabase(context).workDataDao().getAllWorkDataDates()
     }
+
+    BackHandler {
+        navController.navigate("homePage") {
+            popUpTo("homePage") { inclusive = true }
+        }
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
