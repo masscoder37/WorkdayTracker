@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -66,11 +68,14 @@ fun DriveDataScreen(navController: NavController) {
             .padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Drive Date List", fontSize = 36.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(50.dp))
 
-        LazyColumn {
+    ) {
+        Text(text = "Drive Date List", fontSize = 36.sp, fontWeight = FontWeight.Bold,modifier = Modifier.align(Alignment.CenterHorizontally))
+        Spacer(modifier = Modifier.height(30.dp))
+
+        LazyColumn(
+            modifier = Modifier.weight(1f)
+        ) {
             items(driveDataDates) { driveDay ->
                 Card(
                     modifier = Modifier
@@ -108,14 +113,18 @@ fun DriveDataScreen(navController: NavController) {
         }
 
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(15.dp))
+
+        Button(onClick = { navController.navigate("driveDataSummaryScreen") }) {
+            Text("Data Summary")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
 
         //buttons for manual entry of data and back
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.Center
         ) {
 
             Button(onClick = { navController.navigate("homePage") }) {

@@ -9,11 +9,12 @@ data class DriveData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val date: LocalDate,
     val destination: String,
-    val driveStartTime: Long,
-    val driveEndTime: Long,
-    val driveDuration: Long,
+    //TODO: the drive start and end times are stored in milliseconds. This is not great. Better to store as a local time
+    val driveStartTime: Long, //in milliseconds (Epoch)
+    val driveEndTime: Long,//in milliseconds (Epoch)
+    val driveDuration: Long,//in milliseconds (Epoch)
     val fuelUse: String,
     val comment: String,
-    val weekday: String,  // New field for the day of the week
-    val isManuallyEdited: Boolean = false  // New field to indicate if the entry was manually edited
+    val weekday: String,
+    val isManuallyEdited: Boolean = false
 )

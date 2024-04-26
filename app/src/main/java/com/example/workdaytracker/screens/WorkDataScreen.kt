@@ -66,7 +66,7 @@ fun WorkDataScreen(navController: NavController) {
         Text(text = "Work Date List", fontSize = 36.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(50.dp))
 
-        LazyColumn {
+        LazyColumn(modifier = Modifier.weight(1f)) {
             items(workDataDates) { workDay ->
                 Card(
                     modifier = Modifier
@@ -94,7 +94,12 @@ fun WorkDataScreen(navController: NavController) {
                 }
             }
         }
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(15.dp))
+
+        Button(onClick = { navController.navigate("workDataSummaryScreen") }) {
+            Text("Data Summary")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
 
         //buttons for manual entry of data and back
 
@@ -116,7 +121,6 @@ fun WorkDataScreen(navController: NavController) {
             }
 
         }
-
 
 
     }

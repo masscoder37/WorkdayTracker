@@ -305,7 +305,7 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                         Text("Work ended at:", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(
-                            text = "${endTimeString.value}",
+                            text = endTimeString.value,
                             fontSize = 16.sp,
                             modifier = Modifier
                                 .clickable {
@@ -320,10 +320,21 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                     Spacer(modifier = Modifier.height(20.dp))
 
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Button(onClick = {
+                            // Set isEditing to false to exit editing mode
+                            isEditing.value = false
+                        }) {
+                            Text("Cancel Edit")
+                        }
+
+                        Spacer(modifier = Modifier.width(20.dp))
 
 
-
-                    //TODO: add back button without saving
                     Button(onClick = {
                         // Create an updated workDataForDate!! object from the edited fields
                         val updatedWorkData = WorkData(
@@ -351,6 +362,7 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                         Text("Save")
                     }
 
+                }
                 }
             }
             //without editing

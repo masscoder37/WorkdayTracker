@@ -923,7 +923,7 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(onClick = { navController.navigate("driveDataScreen") }) {
-                            Text("Back")
+                            Text("Cancel Edit")
                         }
                         Spacer(modifier = Modifier.width(20.dp))
                         Button(onClick = { navController.navigate("homePage") }) {

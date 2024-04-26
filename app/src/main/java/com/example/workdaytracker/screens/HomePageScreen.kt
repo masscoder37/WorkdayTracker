@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +30,17 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.workdaytracker.Constants
+import com.example.workdaytracker.database.AppDatabase
+import com.example.workdaytracker.database.DriveData
+import com.example.workdaytracker.database.WorkData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import kotlin.random.Random
 
 
 //HomePage Screen for navigation to the driveScreen, workdayScreen or to the Statistics screen
@@ -38,6 +50,8 @@ fun HomePageScreen(navController: NavController) {
 
     //variables for the tracking of the app state
     val context = LocalContext.current
+
+
 
     val sharedPreferences = context.applicationContext.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -67,32 +81,6 @@ fun HomePageScreen(navController: NavController) {
 
                 navController.navigate("driveScreen/$destination/$startTime")
 
-
-
-                /*AlertDialog.Builder(context)
-                    .setTitle("Continue drive tracking?")
-                    .setMessage("A previous drive tracking session was detected. Do you want to continue it?")
-                    .setPositiveButton("Yes") { _, _ ->
-                        decisionRequired.value = false
-                        val destination =
-                            sharedPreferences.getString(Constants.DRIVE_DESTINATION_KEY, "Home")
-                        val startTime = sharedPreferences.getLong(Constants.TRACKING_START_TIME_KEY, 1L)
-
-                        navController.navigate("driveScreen/$destination/$startTime")
-                    }
-                    .setNegativeButton("No") { _, _ ->
-                        decisionRequired.value = false
-                        with(sharedPreferences.edit()) {
-                            putBoolean(Constants.DRIVE_TRACKING_ACTIVE_KEY, false)
-                            putLong(Constants.START_DATE, 0L)
-                            putLong(Constants.TRACKING_START_TIME_KEY, 0L)
-                            putString(Constants.DRIVE_DESTINATION_KEY, "Home")
-                            commit()
-                        }
-                        isDriveTrackingActive.value = false
-
-                    }
-                    .show()*/
             }
 
 
@@ -107,35 +95,7 @@ fun HomePageScreen(navController: NavController) {
                 decisionRequired.value = false
 
                 navController.navigate("workdayScreen/$trackingStartTime/$previousWorkDuration/$previousPauseDuration/$previousWorkingMode")
-/*
 
-                AlertDialog.Builder(context)
-                    .setTitle("Continue work tracking?")
-                    .setMessage("A previous work tracking session was detected. Do you want to continue it?")
-                    .setPositiveButton("Yes") { _, _ ->
-                        val startTime = sharedPreferences.getLong(Constants.TRACKING_START_TIME_KEY, 1L)
-                        val workDuration = sharedPreferences.getLong(Constants.WORK_DURATION_KEY, 1L)
-                        val pauseDuration = sharedPreferences.getLong(Constants.PAUSE_DURATION_KEY, 1L)
-                        val workingMode =
-                            sharedPreferences.getString(Constants.WORK_MODE_ACTIVE_KEY, "working")
-                        decisionRequired.value = false
-
-                        navController.navigate("workdayScreen/$startTime/$workDuration/$pauseDuration/$workingMode")
-                    }
-                    .setNegativeButton("No") { _, _ ->
-                        with(sharedPreferences.edit()) {
-                            putBoolean(Constants.WORK_TRACKING_ACTIVE_KEY, false)
-                            putLong(Constants.START_DATE, 0L)
-                            putLong(Constants.TRACKING_START_TIME_KEY, 0L)
-                            putLong(Constants.WORK_DURATION_KEY, 0L)
-                            putLong(Constants.PAUSE_DURATION_KEY, 0L)
-                            putString(Constants.WORK_MODE_ACTIVE_KEY, "working")
-                            commit()
-                        }
-                        isWorkTrackingActive.value = false
-                        decisionRequired.value = false
-                    }
-                    .show()*/
             }
         }
     }
@@ -221,7 +181,9 @@ fun HomePageScreen(navController: NavController) {
             }) {
                 Text("Drive Data")
             }
+
             Spacer(modifier = Modifier.width(50.dp))
+
             Button(onClick = {
                 navController.navigate("workDataScreen")
             }) {
@@ -238,3 +200,56 @@ fun HomePageScreenPreview(){
     HomePageScreen(navController = navController)
 
 }
+
+//test: Database testing
+/*fun seedDatabase(testDb: AppDatabase, coScope: CoroutineScope) {
+
+    // Populate WorkData
+    (1..100).forEach {
+        val date = LocalDate.now().minusDays(it.toLong())
+        val startEpoch = LocalTime.of(Random.nextInt(6,10), Random.nextInt(3,58)).atDate(date).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val endEpoch = LocalTime.of(Random.nextInt(16,20), Random.nextInt(3,58)).atDate(date).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val workData = WorkData(
+            date = date,
+            workStartTime = startEpoch,
+            workEndTime = endEpoch,
+            workDuration = endEpoch - startEpoch,
+            pauseDuration = Random.nextLong(1000000, 4000000),
+            weekday = date.dayOfWeek.toString(),
+            isManuallyEdited = false
+        )
+        coScope.launch {
+            withContext(Dispatchers.IO) {
+                val appDatabase = testDb
+                appDatabase.workDataDao().insert(workData)
+            }
+        }
+    }
+
+    val destination = listOf<String>("Home", "Work")
+
+    // Populate DriveData
+    (1..100).forEach {
+        val date = LocalDate.now().minusDays(it.toLong())
+        val startEpoch = LocalTime.of(Random.nextInt(6,10), Random.nextInt(3,58)).atDate(date).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val endEpoch = LocalTime.of(Random.nextInt(11,12), Random.nextInt(3,58)).atDate(date).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val driveData = DriveData(
+            date = date,
+            destination = destination.random(),
+            driveStartTime = startEpoch,
+            driveEndTime = endEpoch,
+            driveDuration = endEpoch - startEpoch,
+            fuelUse = Random.nextInt(4,10).toString(),
+            comment = "db testing commute",
+            weekday = date.dayOfWeek.toString(),
+            isManuallyEdited = false
+        )
+        coScope.launch {
+            withContext(Dispatchers.IO) {
+                val appDatabase = testDb
+                appDatabase.driveDataDao().insert(driveData)
+            }
+        }
+    }
+}*/
+

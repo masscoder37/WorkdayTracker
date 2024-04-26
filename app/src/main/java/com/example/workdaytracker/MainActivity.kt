@@ -102,6 +102,8 @@ fun WorkdayTrackerApp() {
         composable("manualDriveAddScreen") { ManualDriveAddScreen(navController = navController) }
 
         composable("manualWorkAddScreen") { ManualWorkAddScreen(navController = navController) }
+        composable("workDataSummaryScreen") { WorkDataSummaryScreen(navController = navController) }
+        composable("driveDataSummaryScreen") { DriveDataSummaryScreen(navController = navController) }
 
     }
 
