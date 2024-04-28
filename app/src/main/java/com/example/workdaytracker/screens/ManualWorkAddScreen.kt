@@ -206,8 +206,8 @@ fun ManualWorkAddScreen(navController: NavController) {
 
                 val newWorkData = WorkData(
                     date = date.value,
-                    workStartTime = startTimeMilli,
-                    workEndTime = endTimeMilli,
+                    workStartTime = startTime.value,
+                    workEndTime = endTime.value,
                     workDuration = workDurationMilli,
                     pauseDuration = pauseDurationMilli,
                     weekday = date.value.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH),

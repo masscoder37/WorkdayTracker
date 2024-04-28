@@ -66,8 +66,20 @@ interface WorkDataDao {
     suspend fun getWeekdayWithHighestAverageDuration(): WeekdayAverage
 
     // Query to find the entire WorkData object with the earliest starting time
-    @Query("SELECT * FROM work_data ORDER BY workDuration DESC LIMIT 1")
-    suspend fun getWorkDataWithLowestStart(): WorkData
+    @Query("SELECT * FROM work_data ORDER BY workStartTime ASC LIMIT 1")
+    suspend fun getWorkDataWithEarliestStart(): WorkData
+
+    // Query to find the entire WorkData object with the latest starting time
+    @Query("SELECT * FROM work_data ORDER BY workStartTime DESC LIMIT 1")
+    suspend fun getWorkDataWithLatestStart(): WorkData
+
+    // Query to find the entire WorkData object with the earliest starting time
+    @Query("SELECT * FROM work_data ORDER BY workEndTime ASC LIMIT 1")
+    suspend fun getWorkDataWithEarliestEnd(): WorkData
+
+    // Query to find the entire WorkData object with the latest starting time
+    @Query("SELECT * FROM work_data ORDER BY workEndTime DESC LIMIT 1")
+    suspend fun getWorkDataWithLatestEnd(): WorkData
 
     //TODO: create queries to transfer data to the summary screen
 
@@ -75,6 +87,6 @@ interface WorkDataDao {
 
 }
 data class WeekdayAverage(
-    val averageWorkDuration: Long,
-    val weekday: String
+    val weekday: String,
+    val avgDuration: Long
 )

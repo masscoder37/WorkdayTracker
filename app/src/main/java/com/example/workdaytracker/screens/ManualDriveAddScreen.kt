@@ -218,8 +218,8 @@ fun ManualDriveAddScreen(navController: NavController) {
                 val driveDuration = Duration.between(startTime.value, endTime.value).toMillis()
                 val newDriveData = DriveData(
                     date = date.value,
-                    driveStartTime = startTime.value.toSecondOfDay() * 1000L, // converting to milliseconds
-                    driveEndTime = endTime.value.toSecondOfDay() * 1000L, // converting to milliseconds
+                    driveStartTime = startTime.value,
+                    driveEndTime = endTime.value,
                     driveDuration = driveDuration,
                     fuelUse = fuelUse.value,
                     comment = comment.value,

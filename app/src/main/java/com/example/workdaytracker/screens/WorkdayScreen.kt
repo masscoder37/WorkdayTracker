@@ -38,6 +38,8 @@ import com.example.workdaytracker.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -232,8 +234,8 @@ fun WorkdayScreen(
                 //Prepare data for database
                 val workData = WorkData(
                     date = systemDate,
-                    workStartTime = trackingStartTime,
-                    workEndTime = workEndTime,
+                    workStartTime = Instant.ofEpochMilli(trackingStartTime).atZone(ZoneId.systemDefault()).toLocalTime(),
+                    workEndTime = Instant.ofEpochMilli(workEndTime).atZone(ZoneId.systemDefault()).toLocalTime(),
                     workDuration = workTimer.longValue,
                     pauseDuration = pauseTimer.longValue,
                     weekday = systemDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)

@@ -42,6 +42,8 @@ import com.example.workdaytracker.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -177,19 +179,14 @@ fun DriveScreen(navController: NavController, destination: String, driveStartTim
 
                         val systemDate = LocalDate.now()
 
-                        //save data into database
-                        //rather save LocalDate
-                        //val parsedDate = LocalDate.parse(systemDate.toString())
-                        //val formatter = DateTimeFormatter.ofPattern("dd. MMM yyyy")
-                        //val formattedDate = parsedDate.format(formatter)
 
 
                         //Prepare data for database
                         val driveData = DriveData(
                             date = systemDate,
                             destination = destination,
-                            driveStartTime = driveStartTime,
-                            driveEndTime = driveEndTime.longValue,
+                            driveStartTime = Instant.ofEpochMilli(driveStartTime).atZone(ZoneId.systemDefault()).toLocalTime(),
+                            driveEndTime = Instant.ofEpochMilli(driveEndTime.longValue).atZone(ZoneId.systemDefault()).toLocalTime() ,
                             driveDuration = (driveEndTime.longValue-driveStartTime),
                             fuelUse = fuelUse.value,
                             comment = comment.value,

@@ -43,6 +43,7 @@ import com.example.workdaytracker.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -83,8 +84,8 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
 
             //handle variables for editing
             val isEditing = remember { mutableStateOf(false) }
-            val workStart = remember { mutableLongStateOf(workDataForDate!!.workStartTime) }
-            val workEnd = remember { mutableLongStateOf(workDataForDate!!.workEndTime) }
+            val workStart = remember { mutableStateOf(workDataForDate!!.workStartTime) }
+            val workEnd = remember { mutableStateOf(workDataForDate!!.workEndTime) }
             val workDuration = remember { mutableLongStateOf(workDataForDate!!.workDuration) }
             val pauseDuration = remember { mutableLongStateOf(workDataForDate!!.pauseDuration) }
 
@@ -107,28 +108,12 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                 remember { mutableIntStateOf((TimeUnit.MILLISECONDS.toMinutes(pauseDuration.longValue) % 60).toInt()) }
 
             //display start work time in string hh:mm
-            val instantStart =
-                remember { mutableStateOf(Instant.ofEpochMilli(workDataForDate!!.workStartTime)) }
-            val localTimeStart = remember {
-                mutableStateOf(
-                    instantStart.value.atZone(ZoneId.systemDefault()).toLocalTime()
-                )
-            }
-
-
             val startTimeString =
-                remember { mutableStateOf(localTimeStart.value.format(timeFormatter)) }
+                remember { mutableStateOf(workStart.value.format(timeFormatter)) }
 
             //same for end work time
-            val instantEnd =
-                remember { mutableStateOf(Instant.ofEpochMilli(workDataForDate!!.workEndTime)) }
-            val localTimeEnd = remember {
-                mutableStateOf(
-                    instantEnd.value.atZone(ZoneId.systemDefault()).toLocalTime()
-                )
-            }
             val endTimeString =
-                remember { mutableStateOf(localTimeEnd.value.format(timeFormatter)) }
+                remember { mutableStateOf(workEnd.value.format(timeFormatter)) }
 
             val workDurationString = remember{ mutableStateOf(String.format(
                 "%02d:%02d",
@@ -152,23 +137,23 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
 
 
             if (showTimePickerDialog.value) {
-                val time = if (isStartTimePicker.value) localTimeStart.value else localTimeEnd.value
+                val time = if (isStartTimePicker.value) workStart.value else workEnd.value
                 TimePickerDialog(
                     context,
                     { _, hourOfDay, minute ->
                         val selectedTime = LocalTime.of(hourOfDay, minute)
                         if (isStartTimePicker.value) {
-                            localTimeStart.value = selectedTime
-                            startTimeString.value = localTimeStart.value.format(timeFormatter)
-                            workStart.longValue = selectedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            workStart.value = selectedTime
+                            startTimeString.value = workStart.value.format(timeFormatter)
+                            workStart.value = selectedTime
                         } else {
-                            localTimeEnd.value = selectedTime
-                            endTimeString.value = localTimeEnd.value.format(timeFormatter)
-                            workEnd.longValue = selectedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            workEnd.value = selectedTime
+                            endTimeString.value = workEnd.value.format(timeFormatter)
+                            workEnd.value = selectedTime
                         }
                         // Automatically calculate work duration
-                        if (workEnd.longValue > workStart.longValue) {
-                            val durationMillis = workEnd.longValue - workStart.longValue
+                        if (workEnd.value.isAfter(workStart.value)) {
+                            val durationMillis = Duration.between(workEnd.value, workStart.value).toMillis()
                             workDuration.longValue = durationMillis - pauseDuration.longValue
                             workDurationString.value = formatDuration(durationMillis - pauseDuration.longValue)
                         }
@@ -192,7 +177,7 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                         pauseDurationString.value = formatDuration(totalPauseMillis.toLong())
 
                         // Recalculate work duration
-                        val durationMillis = workEnd.longValue - workStart.longValue
+                        val durationMillis = Duration.between(workEnd.value, workStart.value).toMillis()
                         if (durationMillis > totalPauseMillis) {
                             workDuration.longValue = durationMillis - totalPauseMillis
                             workDurationString.value = formatDuration(workDuration.longValue)
@@ -338,8 +323,8 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                     Button(onClick = {
                         // Create an updated workDataForDate!! object from the edited fields
                         val updatedWorkData = WorkData(
-                            workStartTime = workStart.longValue,
-                            workEndTime = workEnd.longValue,
+                            workStartTime = workStart.value,
+                            workEndTime = workEnd.value,
                             workDuration = workDuration.longValue,
                             pauseDuration = pauseDuration.longValue,
                             date = selectedDate,
@@ -531,19 +516,7 @@ catch (e: Exception){
 return millisecondsResult
 }
 
-fun durationStringMinutesToMilliseconds(timeString: String, initialValue: Long): Long {
 
-    var millisecondsResult : Long
-    try{
-        val timeStringArray = timeString.split(":")
-        val timeStringMinutes= timeStringArray[0]
-        val timeStringSeconds = timeStringArray[1]
-        millisecondsResult = (timeStringMinutes.toLong() *  60 * 1000 + timeStringSeconds.toLong()  * 1000)}
-    catch (e: Exception){
-        millisecondsResult = initialValue
-    }
-    return millisecondsResult
-}
 
 fun formatDuration(milliseconds: Long): String {
     val hours = TimeUnit.MILLISECONDS.toHours(milliseconds).toInt()
@@ -551,14 +524,5 @@ fun formatDuration(milliseconds: Long): String {
     return String.format("%02d:%02d", hours, minutes)
 }
 
-fun durationStringToMilliseconds(duration: String): Long {
-    return try {
-        val parts = duration.split(":").map { it.trim() }
-        val hours = parts[0].toInt()
-        val minutes = parts[1].toInt()
-        (hours * 3600000L) + (minutes * 60000L)
-    } catch (e: Exception) {
-        0L // Default to 0 if parsing fails
-    }
-}
+
 

@@ -55,6 +55,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.text.style.TextDecoration
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.Locale
@@ -163,16 +165,9 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                 remember { mutableStateOf(driveDataForDate[workIndex].fuelUse) }
 
                             //drive start time
-                            val driveWorkStartMilli =
-                                remember { mutableLongStateOf(driveDataForDate[workIndex].driveStartTime) }
-
-                            val instantDriveWorkStart =
-                                remember { mutableStateOf(Instant.ofEpochMilli(driveWorkStartMilli.longValue)) }
-
                             val localTimeWorkDriveStart = remember {
                                 mutableStateOf(
-                                    instantDriveWorkStart.value.atZone(ZoneId.systemDefault())
-                                        .toLocalTime()
+                                    driveDataForDate[workIndex].driveStartTime
                                 )
                             }
 
@@ -183,16 +178,9 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                             }
 
                             //drive end time
-                            val driveWorkEndMilli =
-                                remember { mutableLongStateOf(driveDataForDate[workIndex].driveEndTime) }
-
-                            val instantDriveWorkEnd =
-                                remember { mutableStateOf(Instant.ofEpochMilli(driveWorkEndMilli.longValue)) }
-
                             val localTimeWorkDriveEnd = remember {
                                 mutableStateOf(
-                                    instantDriveWorkEnd.value.atZone(ZoneId.systemDefault())
-                                        .toLocalTime()
+                                    driveDataForDate[workIndex].driveEndTime
                                 )
                             }
 
@@ -278,11 +266,11 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
                                             val pickedTime = LocalTime.of(hour, minute)
                                             driveWorkStartString.value = pickedTime.format(timeFormatter)
-                                            driveWorkStartMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                            localTimeWorkDriveStart.value = pickedTime
 
                                             // Automatically update duration if end time is already set
-                                            if (driveWorkEndMilli.longValue > driveWorkStartMilli.longValue) {
-                                                val durationMillis = driveWorkEndMilli.longValue - driveWorkStartMilli.longValue
+                                            if (localTimeWorkDriveEnd.value.isAfter(localTimeWorkDriveStart.value)) {
+                                                val durationMillis = Duration.between(localTimeWorkDriveEnd.value, localTimeWorkDriveStart.value).toMillis()
                                                 updateDurationFields(durationMillis, workDriveDurationMinutes, workDriveDurationSeconds, workDriveDurationString)
                                                 driveWorkDuration.longValue = durationMillis
                                             }
@@ -317,11 +305,11 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
                                             val pickedTime = LocalTime.of(hour, minute)
                                             driveWorkEndString.value = pickedTime.format(timeFormatter)
-                                            driveWorkEndMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                            localTimeWorkDriveEnd.value = pickedTime
 
                                             // Automatically update duration
-                                            if (driveWorkEndMilli.longValue > driveWorkStartMilli.longValue) {
-                                                val durationMillis = driveWorkEndMilli.longValue - driveWorkStartMilli.longValue
+                                            if (localTimeWorkDriveEnd.value.isAfter(localTimeWorkDriveStart.value)) {
+                                                val durationMillis = Duration.between(localTimeWorkDriveEnd.value, localTimeWorkDriveStart.value).toMillis()
                                                 updateDurationFields(durationMillis, workDriveDurationMinutes, workDriveDurationSeconds, workDriveDurationString)
                                                 driveWorkDuration.longValue = durationMillis
                                             }
@@ -369,8 +357,8 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         id = copyOfWorkDrive.value.id,
                                         date = selectedDate,
                                         driveDuration = driveWorkDuration.longValue,
-                                        driveStartTime = driveWorkStartMilli.longValue,
-                                        driveEndTime = driveWorkEndMilli.longValue,
+                                        driveStartTime = localTimeWorkDriveStart.value,
+                                        driveEndTime = localTimeWorkDriveEnd.value,
                                         fuelUse = driveWorkFuelUse.value,
                                         comment = driveWorkComment.value,
                                         destination = "Work",
@@ -561,16 +549,9 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                             remember { mutableStateOf(driveDataForDate[homeIndex].fuelUse) }
 
                         //drive start time
-                        val driveHomeStartMilli =
-                            remember { mutableLongStateOf(driveDataForDate[homeIndex].driveStartTime) }
-
-                        val instantDriveHomeStart =
-                            remember { mutableStateOf(Instant.ofEpochMilli(driveHomeStartMilli.longValue)) }
-
                         val localTimeHomeDriveStart = remember {
                             mutableStateOf(
-                                instantDriveHomeStart.value.atZone(ZoneId.systemDefault())
-                                    .toLocalTime()
+                                driveDataForDate[homeIndex].driveStartTime
                             )
                         }
 
@@ -581,16 +562,9 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                         }
 
                         //drive end time
-                        val driveHomeEndMilli =
-                            remember { mutableLongStateOf(driveDataForDate[homeIndex].driveEndTime) }
-
-                        val instantDriveHomeEnd =
-                            remember { mutableStateOf(Instant.ofEpochMilli(driveHomeEndMilli.longValue)) }
-
                         val localTimeHomeDriveEnd = remember {
                             mutableStateOf(
-                                instantDriveHomeEnd.value.atZone(ZoneId.systemDefault())
-                                    .toLocalTime()
+                                driveDataForDate[homeIndex].driveEndTime
                             )
                         }
 
@@ -674,11 +648,11 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
                                         val pickedTime = LocalTime.of(hour, minute)
                                         driveHomeStartString.value = pickedTime.format(timeFormatter)
-                                        driveHomeStartMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                        localTimeHomeDriveStart.value = pickedTime
 
                                         // Automatically update duration if end time is already set
-                                        if (driveHomeEndMilli.longValue > driveHomeStartMilli.longValue) {
-                                            val durationMillis = driveHomeEndMilli.longValue - driveHomeStartMilli.longValue
+                                        if (localTimeHomeDriveEnd.value.isAfter(localTimeHomeDriveStart.value)) {
+                                            val durationMillis = Duration.between(localTimeHomeDriveEnd.value, localTimeHomeDriveStart.value).toMillis()
                                             updateDurationFields(durationMillis, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
                                         }
                                     }, initialTime.hour, initialTime.minute, true).show()
@@ -710,13 +684,12 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     TimePickerDialog(context, { _: TimePicker, hour: Int, minute: Int ->
                                         val pickedTime = LocalTime.of(hour, minute)
                                         driveHomeEndString.value = pickedTime.format(timeFormatter)
-                                        driveHomeEndMilli.longValue = pickedTime.atDate(selectedDate).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                        localTimeHomeDriveEnd.value = pickedTime
 
                                         // Automatically update duration
-                                        if (driveHomeEndMilli.longValue > driveHomeStartMilli.longValue) {
-                                            val durationMillis = driveHomeEndMilli.longValue - driveHomeStartMilli.longValue
+                                        if (localTimeHomeDriveEnd.value.isAfter(localTimeHomeDriveStart.value)) {
+                                            val durationMillis = Duration.between(localTimeHomeDriveEnd.value, localTimeHomeDriveStart.value).toMillis()
                                             updateDurationFields(durationMillis, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
-                                            driveHomeDuration.longValue = durationMillis
                                         }
                                     }, initialTime.hour, initialTime.minute, true).show()
                                 }) {
@@ -760,8 +733,8 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                     id = copyOfHomeDrive.value.id,
                                     date = selectedDate,
                                     driveDuration = driveHomeDuration.longValue,
-                                    driveStartTime = driveHomeStartMilli.longValue,
-                                    driveEndTime = driveHomeEndMilli.longValue,
+                                    driveStartTime = localTimeHomeDriveStart.value,
+                                    driveEndTime = localTimeHomeDriveEnd.value,
                                     fuelUse = driveHomeFuelUse.value,
                                     comment = driveHomeComment.value,
                                     destination = "Home",weekday = selectedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
@@ -950,6 +923,8 @@ fun updateDurationFields(
     secondsState.value = seconds
     durationStringState.value = String.format("%02d:%02d", minutes, seconds)
 }
+
+
 
 
 
