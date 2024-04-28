@@ -276,6 +276,10 @@ fun WorkDataSummaryScreen(navController: NavController) {
                 Button(onClick = { navController.navigate("homePage") }) {
                     Text("Home")
                 }
+                Spacer(modifier = Modifier.width(50.dp))
+                Button(onClick = { navController.navigate("workDataGraphScreen") }) {
+                    Text("Graphs")
+                }
             }
         }
 
