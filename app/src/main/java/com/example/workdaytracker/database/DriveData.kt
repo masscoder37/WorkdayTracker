@@ -9,7 +9,7 @@ import java.time.LocalTime
 data class DriveData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val date: LocalDate,
-    val destination: String,
+    val destination: String, //can be only "Home" or "Work"
     val driveStartTime: LocalTime,
     val driveEndTime: LocalTime,
     val driveDuration: Long,//in milliseconds
