@@ -35,32 +35,32 @@ interface DriveDataDao {
 
     // Query to get the total summed drive duration
     @Query("SELECT SUM(driveDuration) FROM drive_data")
-    fun getTotalDrivesDuration(): Long
+    suspend fun getTotalDrivesDuration(): Long
 
     @Query("SELECT AVG(driveDuration) FROM drive_data WHERE destination = 'Work'")
-    fun getAverageDurationWorkDrives(): Long
+    suspend fun getAverageDurationWorkDrives(): Long
     @Query("SELECT AVG(driveDuration) FROM drive_data WHERE destination = 'Home'")
-    fun getAverageDurationHomeDrives(): Long
+    suspend fun getAverageDurationHomeDrives(): Long
 
 
 
     // Query to get the fastest drive its date for 'Work' destination
-    @Query("SELECT MIN(driveDuration) as longestDuration, date FROM drive_data WHERE destination = 'Work' GROUP BY destination")
-    fun getFastestWorkDrive(): DriveDetail
+    @Query("SELECT MIN(driveDuration) as extremeDuration, date FROM drive_data WHERE destination = 'Work' GROUP BY destination")
+    suspend fun getFastestWorkDrive(): DriveDetail
 
 
     // Query to get the slowest drive its date for 'Work' destination
-    @Query("SELECT MAX(driveDuration) as longestDuration, date FROM drive_data WHERE destination = 'Work' GROUP BY destination")
-    fun getSlowestWorkDrive(): DriveDetail
+    @Query("SELECT MAX(driveDuration) as extremeDuration, date FROM drive_data WHERE destination = 'Work' GROUP BY destination")
+    suspend fun getSlowestWorkDrive(): DriveDetail
 
     // Query to get the fastest drive its date for 'Home' destination
-    @Query("SELECT MIN(driveDuration) as longestDuration, date FROM drive_data WHERE destination = 'Home' GROUP BY destination")
-    fun getFastestHomeDrive(): DriveDetail
+    @Query("SELECT MIN(driveDuration) as extremeDuration, date FROM drive_data WHERE destination = 'Home' GROUP BY destination")
+    suspend fun getFastestHomeDrive(): DriveDetail
 
 
     // Query to get the slowest drive its date for 'Home' destination
-    @Query("SELECT MAX(driveDuration) as longestDuration, date FROM drive_data WHERE destination = 'Home' GROUP BY destination")
-    fun getSlowestHomeDrive(): DriveDetail
+    @Query("SELECT MAX(driveDuration) as extremeDuration, date FROM drive_data WHERE destination = 'Home' GROUP BY destination")
+    suspend fun getSlowestHomeDrive(): DriveDetail
 
 
     //Query to get the weekday with the highest average work drive duration
@@ -109,7 +109,7 @@ interface DriveDataDao {
         FROM drive_data
         WHERE destination = 'Work'
     """)
-    fun getAverageFuelConsumptionForWork(): Double
+    suspend fun getAverageFuelConsumptionForWork(): Double
 
     //get the average fuel consumption for work drives
     @Query("""
@@ -117,7 +117,7 @@ interface DriveDataDao {
         FROM drive_data
         WHERE destination = 'Home'
     """)
-    fun getAverageFuelConsumptionForHome(): Double
+    suspend fun getAverageFuelConsumptionForHome(): Double
 
 
 }
@@ -128,6 +128,6 @@ data class DrivesWeekdayAverage(
 )
 
 data class DriveDetail(
-    val longestDuration: Long,
+    val extremeDuration: Long,
     val date: LocalDate
 )

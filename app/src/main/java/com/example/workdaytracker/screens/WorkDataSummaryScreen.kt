@@ -230,7 +230,7 @@ fun WorkDataSummaryScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "${mostProdWeekday.weekday} (avg. $mostProdDayDurString)",
+                    text = "${mostProdWeekday.weekday.lowercase()} (avg. $mostProdDayDurString)",
                     fontSize = 15.sp,
                     textAlign = TextAlign.Right,
                     modifier = Modifier.fillMaxWidth()
@@ -252,7 +252,7 @@ fun WorkDataSummaryScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "${leastProdWeekday.weekday} (avg. $leastProdDayDurString)",
+                    text = "${leastProdWeekday.weekday.lowercase()} (avg. $leastProdDayDurString)",
                     fontSize = 15.sp,
                     textAlign = TextAlign.Right,
                     modifier = Modifier.fillMaxWidth()

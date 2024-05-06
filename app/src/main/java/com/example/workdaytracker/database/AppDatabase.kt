@@ -11,7 +11,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.time.LocalTime
 
-@Database(entities = [DriveData::class, WorkData::class], version = 3, exportSchema = false)
+@Database(entities = [DriveData::class, WorkData::class], version = 4, exportSchema = false)
 @TypeConverters(AppDatabase.LocalDateConverter::class, AppDatabase.LocalTimeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun driveDataDao(): DriveDataDao
@@ -27,7 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "app_database"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
                 INSTANCE = instance
                 instance
             }
@@ -108,6 +108,38 @@ abstract class AppDatabase : RoomDatabase() {
                 // Step 4: Rename the new table to the original table name
                 database.execSQL("ALTER TABLE new_drive_data RENAME TO drive_data")
 
+            }
+        }
+
+        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Update weekdays for drive_data
+                database.execSQL("""
+            UPDATE drive_data
+            SET weekday = (SELECT CASE strftime('%w', date)
+                WHEN '0' THEN 'Sunday'
+                WHEN '1' THEN 'Monday'
+                WHEN '2' THEN 'Tuesday'
+                WHEN '3' THEN 'Wednesday'
+                WHEN '4' THEN 'Thursday'
+                WHEN '5' THEN 'Friday'
+                WHEN '6' THEN 'Saturday'
+                END)
+        """)
+
+                // Update weekdays for work_data
+                database.execSQL("""
+            UPDATE work_data
+            SET weekday = (SELECT CASE strftime('%w', date)
+                WHEN '0' THEN 'Sunday'
+                WHEN '1' THEN 'Monday'
+                WHEN '2' THEN 'Tuesday'
+                WHEN '3' THEN 'Wednesday'
+                WHEN '4' THEN 'Thursday'
+                WHEN '5' THEN 'Friday'
+                WHEN '6' THEN 'Saturday'
+                END)
+        """)
             }
         }
 
