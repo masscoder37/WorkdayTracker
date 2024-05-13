@@ -54,6 +54,7 @@ import java.time.format.DateTimeParseException
 import java.time.format.TextStyle
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,8 +135,6 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
             val isStartTimePicker = remember { mutableStateOf(true) }
             val showPausePickerDialog = remember { mutableStateOf(false)  }
 
-
-
             if (showTimePickerDialog.value) {
                 val time = if (isStartTimePicker.value) workStart.value else workEnd.value
                 TimePickerDialog(
@@ -152,17 +151,28 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                             workEnd.value = selectedTime
                         }
                         // Automatically calculate work duration
-                        if (workEnd.value.isAfter(workStart.value)) {
-                            val durationMillis = Duration.between(workEnd.value, workStart.value).toMillis()
+                        if(workEnd.value.isAfter(workStart.value)) {
+                            val durationMillis = Duration.between(workEnd.value, workStart.value)
+                                .toMillis().absoluteValue
                             workDuration.longValue = durationMillis - pauseDuration.longValue
-                            workDurationString.value = formatDuration(durationMillis - pauseDuration.longValue)
+                            workDurationString.value =
+                                formatDuration(durationMillis - pauseDuration.longValue)
+                        }
+                        else{
+                            workDuration.longValue = 0L
+                            workDurationString.value =
+                                formatDuration(0L)
                         }
                         showTimePickerDialog.value = false
                     },
                     time.hour,
                     time.minute,
                     true
-                ).show()
+                ).apply {
+                    setOnCancelListener {
+                        showTimePickerDialog.value = false
+                    }
+                }.show()
             }
 
             // Handling the pause duration picker dialog
@@ -177,18 +187,29 @@ fun WorkDataDetailScreen(navController: NavController, selectedDate: LocalDate) 
                         pauseDurationString.value = formatDuration(totalPauseMillis.toLong())
 
                         // Recalculate work duration
-                        val durationMillis = Duration.between(workEnd.value, workStart.value).toMillis()
-                        if (durationMillis > totalPauseMillis) {
+                        val durationMillis = Duration.between(workEnd.value, workStart.value).toMillis().absoluteValue
+
+                        if(durationMillis > workDuration.longValue) {
                             workDuration.longValue = durationMillis - totalPauseMillis
                             workDurationString.value = formatDuration(workDuration.longValue)
                         }
+                        else{
+                            workDuration.longValue = 0L
+                            workDurationString.value = formatDuration(workDuration.longValue)
+                        }
+
+
 
                         showPausePickerDialog.value = false
                     },
                     currentPauseHours,
                     currentPauseMinutes,
                     true
-                ).show()
+                ).apply {
+                    setOnCancelListener {
+                        showPausePickerDialog.value = false
+                    }
+                }.show()
             }
 
             //editing view

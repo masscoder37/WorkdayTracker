@@ -375,7 +375,7 @@ fun WorkDataSummaryScreen(navController: NavController) {
 
 fun durationToString (milliseconds: Long) : String{
     val hours = TimeUnit.MILLISECONDS.toHours(milliseconds).toInt()
-    val minutes = (TimeUnit.MILLISECONDS.toHours(milliseconds) %60).toInt()
+    val minutes = (TimeUnit.MILLISECONDS.toMinutes(milliseconds) %60).toInt()
     return String.format("%02d:%02d", hours, minutes)
 }
 

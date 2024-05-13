@@ -535,13 +535,13 @@ fun DriveDataSummaryScreen(navController: NavController) {
 
 fun durationToStringHHMIN(milliseconds: Long): String {
     val hours = TimeUnit.MILLISECONDS.toHours(milliseconds).toInt()
-    val minutes = (TimeUnit.MILLISECONDS.toHours(milliseconds) % 60).toInt()
+    val minutes = (TimeUnit.MILLISECONDS.toMinutes(milliseconds) % 60).toInt()
     return String.format("%02d:%02d", hours, minutes)
 }
 
 fun durationToStringMINSS(milliseconds: Long): String {
     val minutes = TimeUnit.MILLISECONDS.toMinutes(milliseconds).toInt()
-    val seconds = (TimeUnit.MILLISECONDS.toMinutes(milliseconds) % 60).toInt()
+    val seconds = (TimeUnit.MILLISECONDS.toSeconds(milliseconds) % 60).toInt()
     return String.format("%02d:%02d", minutes, seconds)
 }
 

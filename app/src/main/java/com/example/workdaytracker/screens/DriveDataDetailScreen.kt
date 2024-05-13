@@ -60,6 +60,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +102,6 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                 if (driveDataForDate[i].destination == "Work")
                     workPresentAt.add(i)
             }
-
 
             //column definition and main header
             Column(
@@ -269,11 +269,28 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                             localTimeWorkDriveStart.value = pickedTime
 
                                             // Automatically update duration if end time is already set
-                                            if (localTimeWorkDriveEnd.value.isAfter(localTimeWorkDriveStart.value)) {
-                                                val durationMillis = Duration.between(localTimeWorkDriveEnd.value, localTimeWorkDriveStart.value).toMillis()
-                                                updateDurationFields(durationMillis, workDriveDurationMinutes, workDriveDurationSeconds, workDriveDurationString)
-                                                driveWorkDuration.longValue = durationMillis
+                                            if(localTimeWorkDriveEnd.value.isAfter(localTimeWorkDriveStart.value)) {
+                                                driveWorkDuration.longValue = Duration.between(
+                                                    localTimeWorkDriveEnd.value,
+                                                    localTimeWorkDriveStart.value
+                                                ).toMillis().absoluteValue
+                                                updateDurationFields(
+                                                    driveWorkDuration.longValue,
+                                                    workDriveDurationMinutes,
+                                                    workDriveDurationSeconds,
+                                                    workDriveDurationString
+                                                )
                                             }
+                                            else{
+                                                driveWorkDuration.longValue = 0L
+                                                updateDurationFields(
+                                                    driveWorkDuration.longValue,
+                                                    workDriveDurationMinutes,
+                                                    workDriveDurationSeconds,
+                                                    workDriveDurationString
+                                                )
+                                            }
+
                                         }, initialTime.hour, initialTime.minute, true).show()
                                     }) {
 
@@ -308,11 +325,29 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                             localTimeWorkDriveEnd.value = pickedTime
 
                                             // Automatically update duration
-                                            if (localTimeWorkDriveEnd.value.isAfter(localTimeWorkDriveStart.value)) {
-                                                val durationMillis = Duration.between(localTimeWorkDriveEnd.value, localTimeWorkDriveStart.value).toMillis()
-                                                updateDurationFields(durationMillis, workDriveDurationMinutes, workDriveDurationSeconds, workDriveDurationString)
-                                                driveWorkDuration.longValue = durationMillis
+                                            if(localTimeWorkDriveEnd.value.isAfter(localTimeWorkDriveStart.value)) {
+
+                                                driveWorkDuration.longValue = Duration.between(
+                                                    localTimeWorkDriveEnd.value,
+                                                    localTimeWorkDriveStart.value
+                                                ).toMillis().absoluteValue
+                                                updateDurationFields(
+                                                    driveWorkDuration.longValue,
+                                                    workDriveDurationMinutes,
+                                                    workDriveDurationSeconds,
+                                                    workDriveDurationString
+                                                )
                                             }
+                                            else{
+                                                driveWorkDuration.longValue = 0L
+                                                updateDurationFields(
+                                                    driveWorkDuration.longValue,
+                                                    workDriveDurationMinutes,
+                                                    workDriveDurationSeconds,
+                                                    workDriveDurationString
+                                                )
+                                            }
+
                                         }, initialTime.hour, initialTime.minute, true).show()
                                     }) {
                                         Spacer(modifier = Modifier.width(5.dp))
@@ -651,10 +686,15 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         localTimeHomeDriveStart.value = pickedTime
 
                                         // Automatically update duration if end time is already set
-                                        if (localTimeHomeDriveEnd.value.isAfter(localTimeHomeDriveStart.value)) {
-                                            val durationMillis = Duration.between(localTimeHomeDriveEnd.value, localTimeHomeDriveStart.value).toMillis()
-                                            updateDurationFields(durationMillis, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
+                                        if (localTimeHomeDriveEnd.value.isAfter(localTimeHomeDriveStart.value)
+                                        ) {
+                                            driveHomeDuration.longValue = Duration.between(localTimeHomeDriveEnd.value, localTimeHomeDriveStart.value).toMillis().absoluteValue
+                                            updateDurationFields(driveHomeDuration.longValue, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
+                                        } else {
+                                            driveHomeDuration.longValue = 0L
+                                            updateDurationFields(driveHomeDuration.longValue, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
                                         }
+
                                     }, initialTime.hour, initialTime.minute, true).show()
                                 }) {
 
@@ -687,10 +727,24 @@ fun DriveDataDetailScreen(navController: NavController, selectedDate: LocalDate)
                                         localTimeHomeDriveEnd.value = pickedTime
 
                                         // Automatically update duration
-                                        if (localTimeHomeDriveEnd.value.isAfter(localTimeHomeDriveStart.value)) {
-                                            val durationMillis = Duration.between(localTimeHomeDriveEnd.value, localTimeHomeDriveStart.value).toMillis()
-                                            updateDurationFields(durationMillis, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
+                                        if (localTimeHomeDriveEnd.value.isAfter(localTimeHomeDriveStart.value)
+                                        ) {
+                                            driveHomeDuration.longValue = Duration.between(
+                                                localTimeHomeDriveEnd.value,
+                                                localTimeHomeDriveStart.value
+                                            ).toMillis().absoluteValue
+                                            updateDurationFields(
+                                                driveHomeDuration.longValue,
+                                                homeDriveDurationMinutes,
+                                                homeDriveDurationSeconds,
+                                                homeDriveDurationString
+                                            )
                                         }
+                                        else{
+                                            driveHomeDuration.longValue = 0L
+                                            updateDurationFields(driveHomeDuration.longValue, homeDriveDurationMinutes, homeDriveDurationSeconds, homeDriveDurationString)
+                                        }
+
                                     }, initialTime.hour, initialTime.minute, true).show()
                                 }) {
                                     Spacer(modifier = Modifier.width(5.dp))
